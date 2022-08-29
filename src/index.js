@@ -37,8 +37,7 @@ class Journey {
     start() { return this._trains[0].start(); }
 
     finish() {
-        //return this._trains[this._trains.length-1].finish();
-        return this._trains;
+        return this._trains[this._trains.length-1].finish();
     }
 }
 
