@@ -46,7 +46,7 @@ class JourneyFinder {
         this.trains = trains;
     }
     find_journey(station_id_start, station_id_stop, date_time_start) {
-        return new Journey([]);
+        return new Journey(this.trains);
     }
 }
 
