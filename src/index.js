@@ -30,6 +30,19 @@ class Journey {
         this._trains = trains;
     }
 
+    static journey_start(start_station_id, start_time) {
+        return {
+            trains: () => [],
+            changes: () => 0,
+            start: () => new StationStop(start_station_id, start_time),
+            finish: () => new StationStop(start_station_id, start_time)
+        };
+    }
+
+    with_train(train) {
+        return new Journey(this._trains.concat([train]));
+    }
+
     trains() { return this._trains; }
 
     changes() { return this._trains.length - 1; }
@@ -46,6 +59,8 @@ class JourneyFinder {
         this.trains = trains;
     }
     find_journey(station_id_start, station_id_stop, date_time_start) {
+        let visited = {station_id_start: Journey.journey_start(station_id_start, date_time_start)};
+        let to_visit = [];
         return new Journey(this.trains);
     }
 }
