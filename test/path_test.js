@@ -4,7 +4,6 @@ import * as assert from 'assert';
 import { Train, Station, Journey, StationStop, JourneyFinder } from '../src/index.js';
 
 let train_id = 0;
-
 const make_train = function(prov, times) {
     train_id = train_id + 1;
     return new Train(prov, train_id, times.map(e => new StationStop(e[0], e[1])));

@@ -54,15 +54,46 @@ class Journey {
     }
 }
 
+class TrainSet {
+    constructor(trains) {
+        this._trains = trains;
+    }
+
+    destinations_from(station_stop, after_time) {
+        // the first train to each possible destination, that departs after the desired time
+        
+        return this._trains
+            .filter(t => {
+                let r = t.stops_at().includes(station_stop);
+                return r;
+            }).flatMap(t => {
+                return [t];
+            });
+    }
+}
+
 class JourneyFinder {
     constructor(trains) {
-        this.trains = trains;
+        this._trains = new TrainSet(trains);
     }
     find_journey(station_id_start, station_id_stop, date_time_start) {
-        let visited = {station_id_start: Journey.journey_start(station_id_start, date_time_start)};
-        let to_visit = [];
-        return new Journey(this.trains);
+        let fastest_journeys = {station_id_start: Journey.journey_start(station_id_start, date_time_start)};
+        let to_visit = [station_id_start];
+        while (to_visit.length > 0) {
+            let current = to_visit.pop();
+            let latest_time = fastest_journeys[current].finish().arrival();
+            // find all suitable destinations from current.
+            let next_steps = this._trains.destinations_from(current, latest_time)
+            // make journeys from from current to destination
+            // filter using fastest_journeys
+            // update fastest journeys
+            // add suitable destinations to to_visit.
+
+        }
+
+        return new Journey(this._trains);
     }
+
 }
 
 class StationStop {
@@ -92,7 +123,13 @@ class Train {
     }
 
     truncate_journey(start, stop) {
-        // TODO: return a new Train with the limited journey
+        const startIndex = this._timetable.findIndex(station => station.station_id === start);
+        const endIndex = this._timetable.findIndex(station => station.station_id === stop);
+        return new Train(
+            this._provider,
+            this.id,
+            this._timetable.slice(startIndex, endIndex + 1)
+        );
     }
 
     start() {
@@ -122,4 +159,4 @@ let gwr_rgd_gtw = new Train(
     ]
 );
 
-export { Train, Station, Journey, StationStop, JourneyFinder };
+export { Train, Station, TrainSet, Journey, StationStop, JourneyFinder };
