@@ -35,7 +35,8 @@ class Journey {
             trains: () => [],
             changes: () => 0,
             start: () => new StationStop(start_station_id, start_time),
-            finish: () => new StationStop(start_station_id, start_time)
+            finish: () => new StationStop(start_station_id, start_time),
+            with_train: (train) => new Journey([train])
         };
     }
 
@@ -64,10 +65,11 @@ class TrainSet {
         
         return this._trains
             .filter(t => {
-                let r = t.stops_at().includes(station_stop);
-                return r;
+                return t.stops_at().includes(station_stop);
+            }).filter(t => {
+                return t.departure_time(station_stop) >= after_time;
             }).flatMap(t => {
-                return [t];
+                return t.all_destinations_from(station_stop);
             });
     }
 }
@@ -77,21 +79,42 @@ class JourneyFinder {
         this._trains = new TrainSet(trains);
     }
     find_journey(station_id_start, station_id_stop, date_time_start) {
-        let fastest_journeys = {station_id_start: Journey.journey_start(station_id_start, date_time_start)};
+        let fastest_journeys = {};
+        fastest_journeys[station_id_start] = Journey.journey_start(station_id_start, date_time_start);
         let to_visit = [station_id_start];
+        let visited = [];
         while (to_visit.length > 0) {
             let current = to_visit.pop();
+            visited.push(current);
             let latest_time = fastest_journeys[current].finish().arrival();
             // find all suitable destinations from current.
             let next_steps = this._trains.destinations_from(current, latest_time)
-            // make journeys from from current to destination
+            // make journeys from station_id_start to each next step.
             // filter using fastest_journeys
             // update fastest journeys
             // add suitable destinations to to_visit.
-
+            let fastest_to_current = fastest_journeys[current];
+            next_steps
+                .map(step => {
+                    return fastest_to_current.with_train(step); // journeys from start to next_steps
+                }).forEach(journey => {
+                    let journey_finish = journey.finish().station_id;
+                    if (!visited.includes(journey_finish) && !to_visit.includes(journey_finish)) {
+                        to_visit.push(journey_finish);
+                    }
+                    if (fastest_journeys[journey_finish]) {
+                        // there exists a journey to this station
+                        let current_fastest = fastest_journeys[journey_finish];
+                        if (current_fastest.finish().arrival() > journey.finish().arrival()) {
+                            fastest_journeys[journey_finish] = journey;
+                        }
+                    } else {
+                        fastest_journeys[journey_finish] = journey;
+                    }
+                });
         }
 
-        return new Journey(this._trains);
+        return fastest_journeys[station_id_stop];
     }
 
 }
@@ -122,6 +145,19 @@ class Train {
         return Object.entries(this._timetable).map(e => e[1].station_id);
     }
 
+    all_destinations_from(start) {
+        let found = false;
+        let routes = [];
+        for (let i = 0; i < this._timetable.length; ++i) {
+            let current = this._timetable[i];
+            if (found) {
+                routes.push(this.truncate_journey(start, current.station_id));
+            }
+            if (current.station_id === start) found = true;
+        }
+        return routes;
+    }
+
     truncate_journey(start, stop) {
         const startIndex = this._timetable.findIndex(station => station.station_id === start);
         const endIndex = this._timetable.findIndex(station => station.station_id === stop);
@@ -130,6 +166,12 @@ class Train {
             this.id,
             this._timetable.slice(startIndex, endIndex + 1)
         );
+    }
+
+    departure_time(station_id) {
+        return this._timetable
+            .find(station_stop => station_stop.station_id == station_id)
+            .departure()
     }
 
     start() {

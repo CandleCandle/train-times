@@ -4,6 +4,9 @@ import * as assert from 'assert';
 import { Train, Station, Journey, StationStop, JourneyFinder } from '../src/index.js';
 
 
+const make_train = function(prov, train_id, times) {
+    return new Train(prov, train_id, times.map(e => new StationStop(e[0], e[1])));
+}
 
 describe('Train Tests', function() {
     describe('Simple two-station train', function() {
@@ -29,6 +32,9 @@ describe('Train Tests', function() {
         });
         it("truncates the train", function() {
             assert.deepStrictEqual(train.truncate_journey("STA", "END"), train);
+        });
+        it("identifies departure times", function() {
+            assert.deepStrictEqual(train.departure_time("STA"), 1430);
         });
     });
     describe('Simple three-station train', function() {
@@ -74,6 +80,20 @@ describe('Train Tests', function() {
                 ]
             ));
         });
+        it("expansion should show all possible destinations", function() {
+            assert.deepStrictEqual(train.all_destinations_from("STA"), [
+                make_train("PRV", 1, [
+                    ["STA", 1430],
+                    ["MID", 1445]]),
+                make_train("PRV", 1, [
+                    ["STA", 1430],
+                    ["MID", 1445],
+                    ["END", 1500]])
+            ]);
+        });
+        it("identifies departure times", function() {
+            assert.deepStrictEqual(train.departure_time("STA"), 1430);
+            assert.deepStrictEqual(train.departure_time("MID"), 1445);
+        });
     });
-
 });

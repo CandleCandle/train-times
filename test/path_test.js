@@ -14,7 +14,7 @@ describe('Path Tests', function() {
         const trains = [make_train("PRV", [["STA", 1430], ["END", 1500]])];
         it("finds a simple path", function() {
             let finder = new JourneyFinder(trains);
-            let journey = finder.find_journey("STA", "END", "1970-02-02T14:00+00:00");
+            let journey = finder.find_journey("STA", "END", 1400/*"1970-02-02T14:00+00:00"*/);
             assert.strictEqual(journey.trains().length, 1);
             assert.strictEqual(journey.changes(), 0);
             assert.deepStrictEqual(journey.start(), new StationStop("STA", 1430));
@@ -23,12 +23,12 @@ describe('Path Tests', function() {
     });
     describe('Simple two train network, changes.', function() {
         const trains = [
-            make_train("PRV", [["STA", 1430], ["END", 1440]]),
-            make_train("PRV", [["STA", 1450], ["END", 1500]]),
+            make_train("PRV", [["STA", 1430], ["MID", 1440]]),
+            make_train("PRV", [["MID", 1450], ["END", 1500]]),
         ];
         it("finds a simple path", function() {
             let finder = new JourneyFinder(trains);
-            let journey = finder.find_journey("STA", "END", "1970-02-02T14:00+00:00");
+            let journey = finder.find_journey("STA", "END", 1400/*"1970-02-02T14:00+00:00"*/);
             assert.strictEqual(journey.trains().length, 2);
             assert.strictEqual(journey.changes(), 1);
             assert.deepStrictEqual(journey.start(), new StationStop("STA", 1430));
@@ -42,7 +42,7 @@ describe('Path Tests', function() {
         ];
         it("filters trains that are too early", function() {
             let finder = new JourneyFinder(trains);
-            let journey = finder.find_journey("STA", "END", "1970-02-02T14:00+00:00");
+            let journey = finder.find_journey("STA", "END", 1400/*"1970-02-02T14:00+00:00"*/);
             assert.strictEqual(journey.trains().length, 1);
             assert.strictEqual(journey.changes(), 0);
             assert.deepStrictEqual(journey.start(), new StationStop("STA", 1430));
@@ -58,9 +58,9 @@ describe('Path Tests', function() {
         ];
         it("finds the only timely route", function() {
             let finder = new JourneyFinder(trains);
-            let journey = finder.find_journey("STA", "END", "1970-02-02T14:00+00:00");
-            assert.strictEqual(journey.trains().length, 1);
-            assert.strictEqual(journey.changes(), 0);
+            let journey = finder.find_journey("STA", "END", 1400/*"1970-02-02T14:00+00:00"*/);
+            assert.strictEqual(journey.trains().length, 2);
+            assert.strictEqual(journey.changes(), 1);
             assert.deepStrictEqual(journey.start(), new StationStop("STA", 1430));
             assert.deepStrictEqual(journey.finish(), new StationStop("END", 1500));
         });
@@ -73,7 +73,7 @@ describe('Path Tests', function() {
         ];
         it("finds the route with the fewest changes", function() {
             let finder = new JourneyFinder(trains);
-            let journey = finder.find_journey("STA", "END", "1970-02-02T14:00+00:00");
+            let journey = finder.find_journey("STA", "END", 1400/*"1970-02-02T14:00+00:00"*/);
             assert.strictEqual(journey.trains().length, 1);
             assert.strictEqual(journey.changes(), 0);
             assert.deepStrictEqual(journey.start(), new StationStop("STA", 1430));
